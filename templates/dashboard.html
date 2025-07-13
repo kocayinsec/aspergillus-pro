@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Threat Analyzer - Real-time Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/dashboard.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-shield-alt text-primary"></i>
+                Network Threat Analyzer
+            </a>
+            <div class="navbar-nav ms-auto">
+                <div class="nav-item">
+                    <span class="nav-link">
+                        <i id="connection-status" class="fas fa-circle text-danger"></i>
+                        <span id="connection-text">Disconnected</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Main Dashboard -->
+            <div class="col-12">
+                <!-- Status Cards -->
+                <div class="row mb-4 mt-3">
+                    <div class="col-md-3">
+                        <div class="card bg-primary">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="card-title" id="packets-count">0</h4>
+                                        <p class="card-text">Packets Analyzed</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-network-wired fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-danger">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="card-title" id="threats-count">0</h4>
+                                        <p class="card-text">Threats Detected</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="card-title" id="uptime">00:00:00</h4>
+                                        <p class="card-text">Uptime</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-clock fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="card-title" id="status-text">Stopped</h4>
+                                        <p class="card-text">Status</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <button id="monitor-toggle" class="btn btn-light">
+                                            <i class="fas fa-play"></i> Start
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Row -->
+                <div class="row">
+                    <!-- Live Threat Feed -->
+                    <div class="col-md-8">
+                        <div class="card bg-secondary mb-4">
+                            <div class="card-header">
+                                <h5><i class="fas fa-broadcast-tower"></i> Live Threat Feed</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="threat-feed" class="threat-feed">
+                                    <div class="text-center p-4 text-muted">
+                                        <i class="fas fa-shield-alt fa-3x mb-3"></i>
+                                        <p>No threats detected. System is secure.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Network Activity Chart -->
+                        <div class="card bg-secondary">
+                            <div class="card-header">
+                                <h5><i class="fas fa-chart-line"></i> Network Activity</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="networkChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div class="col-md-4">
+                        <!-- System Status -->
+                        <div class="card bg-secondary mb-4">
+                            <div class="card-header">
+                                <h5><i class="fas fa-server"></i> System Status</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Interface</label>
+                                    <input type="text" class="form-control" id="interface-input" value="en0" placeholder="Network interface">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Last Update</label>
+                                    <div id="last-update" class="text-muted">Never</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Active Connections</label>
+                                    <div id="active-connections" class="text-info">0</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Threat Summary -->
+                        <div class="card bg-secondary mb-4">
+                            <div class="card-header">
+                                <h5><i class="fas fa-list"></i> Recent Threats</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="threat-summary">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                        <p>No recent threats</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Controls -->
+                        <div class="card bg-secondary">
+                            <div class="card-header">
+                                <h5><i class="fas fa-cog"></i> Controls</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <button id="export-data" class="btn btn-outline-primary">
+                                        <i class="fas fa-download"></i> Export Data
+                                    </button>
+                                    <button id="clear-alerts" class="btn btn-outline-warning">
+                                        <i class="fas fa-trash"></i> Clear Alerts
+                                    </button>
+                                    <button id="refresh-config" class="btn btn-outline-info">
+                                        <i class="fas fa-sync"></i> Refresh Config
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="threat-toast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body" id="toast-message">
+                    New threat detected!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
