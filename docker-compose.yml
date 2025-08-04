@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # Network Threat Analyzer Web Application
+  threat-analyzer:
+    build: .
+    container_name: network-threat-analyzer
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./configs:/app/configs
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - threat_analyzer_data:/app/database
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - NTA_INTERFACE=${NTA_INTERFACE:-eth0}
+      - NTA_VT_API_KEY=${NTA_VT_API_KEY:-}
+      - NTA_ABUSEIPDB_API_KEY=${NTA_ABUSEIPDB_API_KEY:-}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - threat_analyzer_network
+    # Required for packet capture
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    # Alternative: use privileged mode (less secure)
+    # privileged: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: threat-analyzer-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - threat_analyzer_network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx reverse proxy (optional for production)
+  nginx:
+    image: nginx:alpine
+    container_name: threat-analyzer-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - threat-analyzer
+    networks:
+      - threat_analyzer_network
+    restart: unless-stopped
+    profiles:
+      - production
+
+  # Log aggregation (optional)
+  fluentd:
+    image: fluent/fluentd:v1.16-1
+    container_name: threat-analyzer-logs
+    volumes:
+      - ./logs:/fluentd/log
+      - ./fluentd.conf:/fluentd/etc/fluent.conf:ro
+    ports:
+      - "24224:24224"
+    networks:
+      - threat_analyzer_network
+    restart: unless-stopped
+    profiles:
+      - logging
+
+volumes:
+  redis_data:
+    driver: local
+  threat_analyzer_data:
+    driver: local
+
+networks:
+  threat_analyzer_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
