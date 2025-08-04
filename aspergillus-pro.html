@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aspergillus Pro - Advanced Network Traffic Monitoring</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #0a0e27;
+            color: #e0e0e0;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.4;
+        }
+
+        .main-container {
+            position: relative;
+            z-index: 1;
+            background: transparent;
+            min-height: 100vh;
+        }
+
+        header {
+            background: rgba(20, 24, 48, 0.9);
+            padding: 1.5rem 0;
+            border-bottom: 1px solid rgba(56, 178, 172, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #38b2ac 0%, #4fd1c5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        .status-badge {
+            background: rgba(72, 187, 120, 0.2);
+            color: #48bb78;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(72, 187, 120, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .hero-section h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #4fd1c5;
+        }
+
+        .hero-section p {
+            font-size: 1.2rem;
+            color: #a0aec0;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .feature-card {
+            background: rgba(26, 32, 64, 0.8);
+            border: 1px solid rgba(56, 178, 172, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: #4fd1c5;
+            box-shadow: 0 10px 30px rgba(79, 209, 197, 0.3);
+        }
+
+        .feature-card h3 {
+            color: #4fd1c5;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .feature-card p {
+            color: #a0aec0;
+            line-height: 1.6;
+        }
+
+        .metrics-section {
+            background: rgba(26, 32, 64, 0.6);
+            border-radius: 12px;
+            padding: 3rem;
+            margin-bottom: 3rem;
+            border: 1px solid rgba(56, 178, 172, 0.2);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .metric-box {
+            background: rgba(10, 14, 39, 0.8);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(79, 209, 197, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .metric-box:hover {
+            transform: scale(1.05);
+            border-color: #4fd1c5;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #4fd1c5;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: #a0aec0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tech-badges {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+
+        .badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .badge-network {
+            background: rgba(237, 100, 166, 0.2);
+            color: #ed64a6;
+            border: 1px solid rgba(237, 100, 166, 0.5);
+        }
+
+        .badge-python {
+            background: rgba(72, 187, 120, 0.2);
+            color: #48bb78;
+            border: 1px solid rgba(72, 187, 120, 0.5);
+        }
+
+        .badge-docker {
+            background: rgba(66, 153, 225, 0.2);
+            color: #4299e1;
+            border: 1px solid rgba(66, 153, 225, 0.5);
+        }
+
+        .badge-license {
+            background: rgba(237, 137, 54, 0.2);
+            color: #ed8936;
+            border: 1px solid rgba(237, 137, 54, 0.5);
+        }
+
+        .badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        footer {
+            background: rgba(20, 24, 48, 0.9);
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid rgba(56, 178, 172, 0.3);
+        }
+
+        footer p {
+            color: #a0aec0;
+        }
+
+        .github-link {
+            color: #4fd1c5;
+            text-decoration: none;
+            margin-top: 1rem;
+            display: inline-block;
+            transition: color 0.3s ease;
+        }
+
+        .github-link:hover {
+            color: #38b2ac;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .hero-section h2 {
+                font-size: 1.5rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div class="main-container">
+        <header>
+            <div class="header-content">
+                <h1>🔬 Aspergillus Pro</h1>
+                <div class="status-badge">● System Active</div>
+            </div>
+        </header>
+
+        <div class="content">
+            <section class="hero-section">
+                <h2>Advanced Network Traffic Monitoring & Analysis Platform</h2>
+                <p>A sophisticated cybersecurity dashboard with real-time network monitoring capabilities, featuring an elegant dark theme with green-purple-black color scheme.</p>
+                
+                <div class="tech-badges">
+                    <span class="badge badge-network">Network</span>
+                    <span class="badge badge-python">Python</span>
+                    <span class="badge badge-docker">Docker</span>
+                    <span class="badge badge-license">License</span>
+                </div>
+            </section>
+
+            <section class="metrics-section">
+                <h2 style="text-align: center; color: #4fd1c5; margin-bottom: 2rem;">Live Network Metrics</h2>
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <div class="metric-value" id="packets-count">0</div>
+                        <div class="metric-label">Packets Analyzed</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value" id="threats-count">0</div>
+                        <div class="metric-label">Threats Detected</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value" id="bandwidth-count">0</div>
+                        <div class="metric-label">Bandwidth (Mbps)</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value" id="connections-count">0</div>
+                        <div class="metric-label">Active Connections</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="features-grid">
+                <div class="feature-card">
+                    <h3>🏆 Premium UI/UX</h3>
+                    <p>Modern Design Language - Apple-inspired minimalist interface with sophisticated visual hierarchy and smooth animations.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🎨 Glassmorphism Effects</h3>
+                    <p>Backdrop blur and transparency effects create depth and visual interest throughout the interface.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📊 Animated Backgrounds</h3>
+                    <p>Dynamic p5.js network visualization creates an immersive monitoring experience with real-time particle effects.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🛡️ Responsive Design</h3>
+                    <p>Works seamlessly across all devices with adaptive layouts and touch-optimized interactions.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🎯 Real-Time Updates</h3>
+                    <p>Live metric counters and dynamic visualizations provide instant feedback on network status.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🌐 Interactive Elements</h3>
+                    <p>Mouse-responsive background particles and hover effects enhance user engagement.</p>
+                </div>
+            </section>
+        </div>
+
+        <footer>
+            <p>&copy; 2024 Aspergillus Pro - Advanced Network Security Platform</p>
+            <a href="https://github.com/kocaymsec/aspergillus-pro" class="github-link">View on GitHub →</a>
+        </footer>
+    </div>
+
+    <script>
+        // p5.js Wave Field Visualization
+        let t = 0;
+        let waves = [];
+        let pulses = [];
+
+        function setup() {
+            let canvas = createCanvas(windowWidth, windowHeight);
+            canvas.parent('canvas-container');
+            
+            // Initialize wave points
+            for (let i = 0; i < 5; i++) {
+                waves.push({
+                    amplitude: random(20, 50),
+                    frequency: random(0.01, 0.03),
+                    speed: random(0.005, 0.02),
+                    yOffset: random(height)
+                });
+            }
+        }
+
+        function draw() {
+            clear();
+            
+            // Draw flowing wave lines
+            strokeWeight(0.5);
+            noFill();
+            
+            waves.forEach((wave, index) => {
+                beginShape();
+                for (let x = 0; x < width; x += 10) {
+                    let y = wave.yOffset + sin((x * wave.frequency) + (t * wave.speed)) * wave.amplitude;
+                    
+                    // Color gradient along the wave
+                    let alpha = map(sin(x * 0.01 + t * 0.02), -1, 1, 20, 60);
+                    if (index % 2 === 0) {
+                        stroke(79, 209, 197, alpha); // Teal
+                    } else {
+                        stroke(237, 100, 166, alpha); // Pink
+                    }
+                    
+                    vertex(x, y);
+                }
+                endShape();
+            });
+            
+            // Draw grid of pulsing dots
+            for (let x = 0; x < width; x += 60) {
+                for (let y = 0; y < height; y += 60) {
+                    let distance = dist(mouseX, mouseY, x, y);
+                    let pulse = sin(t * 0.05 + distance * 0.01) * 0.5 + 0.5;
+                    let size = map(pulse, 0, 1, 1, 4);
+                    let alpha = map(distance, 0, 300, 80, 20);
+                    
+                    noStroke();
+                    fill(79, 209, 197, alpha);
+                    circle(x, y, size);
+                }
+            }
+            
+            // Draw radial gradient from mouse
+            if (mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
+                for (let r = 0; r < 200; r += 20) {
+                    let alpha = map(r, 0, 200, 30, 0);
+                    noFill();
+                    strokeWeight(1);
+                    stroke(237, 100, 166, alpha);
+                    circle(mouseX, mouseY, r + sin(t * 0.05) * 10);
+                }
+            }
+            
+            // Create scanning line effect
+            let scanY = (frameCount * 2) % height;
+            strokeWeight(1);
+            stroke(79, 209, 197, 40);
+            line(0, scanY, width, scanY);
+            
+            // Fade trail
+            strokeWeight(20);
+            stroke(79, 209, 197, 10);
+            line(0, scanY - 10, width, scanY - 10);
+            
+            t += 1;
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+        }
+
+        // Animated counters
+        function animateCounter(id, target, duration = 2000) {
+            let element = document.getElementById(id);
+            let start = 0;
+            let startTime = null;
+            
+            function animate(currentTime) {
+                if (!startTime) startTime = currentTime;
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                const current = Math.floor(progress * target);
+                element.textContent = current.toLocaleString();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                }
+            }
+            
+            requestAnimationFrame(animate);
+        }
+
+        // Start animations when page loads
+        window.addEventListener('load', () => {
+            animateCounter('packets-count', 48934, 3000);
+            animateCounter('threats-count', 12, 2000);
+            animateCounter('bandwidth-count', 856, 2500);
+            animateCounter('connections-count', 243, 2000);
+        });
+
+        // Periodic updates to simulate real-time data
+        setInterval(() => {
+            const packets = document.getElementById('packets-count');
+            const current = parseInt(packets.textContent.replace(/,/g, ''));
+            packets.textContent = (current + Math.floor(Math.random() * 100)).toLocaleString();
+            
+            const bandwidth = document.getElementById('bandwidth-count');
+            bandwidth.textContent = (800 + Math.floor(Math.random() * 200)).toLocaleString();
+        }, 3000);
+    </script>
+</body>
+</html>
